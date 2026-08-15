@@ -1,32 +1,43 @@
-# React + TypeScript + Vite
+# 微信公众号 Markdown 编辑器 (高校排版专属版)
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+这是一款基于 React + TypeScript + Vite 构建的纯前端 Web 应用，专为高校行政和学生阅读场景设计。它通过在浏览器本地实时解析 Markdown，并将预设的多套市场验证过的主题 CSS（如：学术经典、校园活力、行政严谨、极简科研）以内联样式 (Inline Styles) 的方式注入到 HTML 中，实现一键复制到微信公众号后台即可完美保留格式的效果。
 
-Currently, two official plugins are available:
+## 核心特性
+- **纯前端处理**：利用浏览器原生 `DOMParser` 进行样式注入，无需后端通信，安全高效。
+- **四大专属主题**：涵盖学术、学生活动、官方公文、极简报告四大场景。
+- **一键复制**：使用 `Clipboard API` 生成可直接粘贴到微信后台的 `text/html` 富文本。
+- **自动防溢出**：对长表格、超宽图片进行自动约束和水平滚动处理，适配微信移动端阅读。
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## 本地开发
+```bash
+npm install
+npm run dev
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## 测试
+已内置针对核心组件和渲染逻辑的自动化测试用例，执行命令即可自动测试排版功能：
+```bash
+npm run test
+```
+
+## Cloudflare Pages 自动部署指南
+
+本项目已连接 GitHub 到 Cloudflare Pages。借助 CI/CD，您只需在本地提交代码并推送到 GitHub，网站即可全自动更新上线，全程无需登录云平台手动操作。
+
+### 如何更新网站并自动发布？
+如果您在本地修改了代码，请在终端（需处于项目根目录下）依次执行以下三条命令：
+
+1. **暂存所有修改：**
+   ```bash
+   git add .
+   ```
+2. **提交并记录本次修改内容（引号里的文字可自行修改）：**
+   ```bash
+   git commit -m "更新内容说明"
+   ```
+3. **推送到 GitHub，触发自动部署：**
+   ```bash
+   git push
+   ```
+
+当 `git push` 执行成功后，稍等约 1-2 分钟，刷新您的专属 `.pages.dev` 域名，网站就会自动更新完毕！
