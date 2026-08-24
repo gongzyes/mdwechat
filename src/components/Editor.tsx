@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, ClipboardEvent, DragEvent } from 'react';
 import { Copy, Monitor, Smartphone } from 'lucide-react';
 import { themes, getTheme } from '../utils/themes';
 import { parseMarkdown } from '../utils/markdownParser';
@@ -65,6 +65,61 @@ export default function Editor() {
   const [viewMode, setViewMode] = useState<'pc' | 'mobile'>('pc');
 
   const previewRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleImageUpload = (file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const base64 = e.target?.result as string;
+      const imgId = `img_${Math.random().toString(36).substr(2, 9)}`;
+      
+      const imageRef = `\n[${imgId}]: ${base64}\n`;
+      const imageInsert = `![图片][${imgId}]`;
+      
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        
+        const before = markdown.substring(0, start);
+        const after = markdown.substring(end);
+        
+        setMarkdown(before + imageInsert + after + imageRef);
+        
+        setTimeout(() => {
+          textarea.selectionStart = textarea.selectionEnd = start + imageInsert.length;
+          textarea.focus();
+        }, 0);
+      } else {
+        setMarkdown(prev => prev + '\n' + imageInsert + '\n' + imageRef);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData.items;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (file) handleImageUpload(file);
+        break; // 只处理第一张图片
+      }
+    }
+  };
+
+  const handleDrop = (e: DragEvent<HTMLTextAreaElement>) => {
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const file = e.dataTransfer.files[0];
+      if (file.type.startsWith('image/')) {
+        e.preventDefault();
+        handleImageUpload(file);
+      }
+    }
+  };
 
   useEffect(() => {
     const theme = getTheme(activeThemeId);
@@ -152,10 +207,14 @@ export default function Editor() {
             Markdown 输入
           </div>
           <textarea
+            ref={textareaRef}
             className="flex-1 w-full p-4 resize-none outline-none text-gray-700 font-mono text-sm leading-relaxed"
             value={markdown}
             onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="在这里输入 Markdown..."
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            placeholder="在这里输入 Markdown... (支持直接粘贴或拖拽图片)"
             spellCheck={false}
           />
         </div>
