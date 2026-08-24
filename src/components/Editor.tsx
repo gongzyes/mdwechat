@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, ClipboardEvent, DragEvent } from 'react';
-import { Copy, Monitor, Smartphone } from 'lucide-react';
+import { Copy, Monitor, Smartphone, ImagePlus } from 'lucide-react';
 import { themes, getTheme } from '../utils/themes';
 import { parseMarkdown } from '../utils/markdownParser';
 import 'highlight.js/styles/github.css'; // 使用 GitHub 风格作为高亮基础
@@ -121,6 +121,17 @@ export default function Editor() {
     }
   };
 
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      if (file.type.startsWith('image/')) {
+        handleImageUpload(file);
+      }
+      // 清空 input，以便重复上传同一张图片
+      e.target.value = '';
+    }
+  };
+
   useEffect(() => {
     const theme = getTheme(activeThemeId);
     const parsedHtml = parseMarkdown(markdown, theme);
@@ -203,8 +214,18 @@ export default function Editor() {
       <main className="flex-1 flex overflow-hidden">
         {/* 左侧 Markdown 编辑区 */}
         <div className="w-1/2 h-full flex flex-col border-r border-gray-200 bg-white">
-          <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-            Markdown 输入
+          <div className="px-4 py-2 bg-gray-100 border-b border-gray-200 text-xs font-semibold text-gray-500 flex justify-between items-center">
+            <span className="uppercase tracking-wider">Markdown 输入</span>
+            <label className="cursor-pointer text-blue-600 hover:text-blue-700 flex items-center gap-1">
+              <ImagePlus size={14} />
+              <span>插入图片</span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                className="hidden" 
+                onChange={handleFileInput} 
+              />
+            </label>
           </div>
           <textarea
             ref={textareaRef}
