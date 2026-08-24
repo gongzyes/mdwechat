@@ -1,8 +1,15 @@
 import { marked } from 'marked';
 import hljs from 'highlight.js';
+import mermaid from 'mermaid';
 import type { Theme } from './themes';
 
-export const parseMarkdown = (markdown: string, theme: Theme): string => {
+// 初始化 mermaid，选择干净的主题
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'default',
+});
+
+export const parseMarkdown = async (markdown: string, theme: Theme): Promise<string> => {
   // 设置 marked，使用 highlight.js
   marked.setOptions({
     gfm: true,
@@ -16,9 +23,63 @@ export const parseMarkdown = (markdown: string, theme: Theme): string => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(rawHtml, 'text/html');
 
-  // 高亮代码块（marked 默认不会给 code 加高亮，除非在 Renderer 里写，但我们可以直接查 DOM）
-  // 对于 marked v18，最简单的方式是用 hljs 处理 DOM
-  doc.querySelectorAll('pre code').forEach((block) => {
+  // 1. 处理 Mermaid 图表（转换为 Base64 PNG 供微信识别）
+  const mermaidBlocks = Array.from(doc.querySelectorAll('pre code.language-mermaid'));
+  for (let i = 0; i < mermaidBlocks.length; i++) {
+    const block = mermaidBlocks[i];
+    const pre = block.parentElement;
+    if (!pre) continue;
+
+    const graphDefinition = block.textContent || '';
+    const id = `mermaid-${Math.random().toString(36).substring(2, 11)}`;
+
+    try {
+      const { svg } = await mermaid.render(id, graphDefinition);
+      
+      // 使用 Blob 和 Canvas 将 SVG 转换为 PNG
+      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      
+      const canvas = document.createElement('canvas');
+      const scale = 2; // 2倍图保证清晰度
+      canvas.width = img.width * scale;
+      canvas.height = img.height * scale;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.scale(scale, scale);
+        // 填充白色背景
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, img.width, img.height);
+        ctx.drawImage(img, 0, 0);
+      }
+      
+      const pngDataUrl = canvas.toDataURL('image/png');
+      URL.revokeObjectURL(url);
+      
+      // 用生成的图片替换原有的代码块
+      const imgNode = document.createElement('img');
+      imgNode.src = pngDataUrl;
+      imgNode.style.maxWidth = '100%';
+      imgNode.style.display = 'block';
+      imgNode.style.margin = '20px auto';
+      pre.replaceWith(imgNode);
+    } catch (err) {
+      console.error('Mermaid 渲染失败', err);
+      // 如果渲染失败，保留源代码块并变红提示
+      block.innerHTML = '【图表渲染失败，请检查 Mermaid 语法】\n' + block.innerHTML;
+      (block as HTMLElement).style.color = 'red';
+    }
+  }
+
+  // 2. 高亮剩余的普通代码块
+  doc.querySelectorAll('pre code:not(.language-mermaid)').forEach((block) => {
     // block 是 Element
     hljs.highlightElement(block as HTMLElement);
   });

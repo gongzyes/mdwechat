@@ -59,7 +59,15 @@ console.log('配置加载成功', config);
 `;
 
 export default function Editor() {
-  const [markdown, setMarkdown] = useState(DEFAULT_MARKDOWN);
+  const [markdown, setMarkdown] = useState(() => {
+    const cached = localStorage.getItem('mdwechat_draft');
+    if (cached) {
+      // 成功恢复后立即删除缓存。这样如果用户没有编辑直接再次刷新，就会加载默认内容
+      setTimeout(() => localStorage.removeItem('mdwechat_draft'), 0);
+      return cached;
+    }
+    return DEFAULT_MARKDOWN;
+  });
   const [activeThemeId, setActiveThemeId] = useState(themes[0].id);
   const [htmlContent, setHtmlContent] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -76,7 +84,8 @@ export default function Editor() {
       const base64 = e.target?.result as string;
       const imgId = `img_${Math.random().toString(36).substr(2, 9)}`;
       
-      const imageRef = `\n[${imgId}]: ${base64}\n`;
+      // 使用 \n\n 确保 marked 解析器将其识别为独立的引用链接定义，而不是普通段落文本
+      const imageRef = `\n\n[${imgId}]: ${base64}\n\n`;
       const imageInsert = `![图片][${imgId}]`;
       
       const textarea = textareaRef.current;
@@ -134,9 +143,21 @@ export default function Editor() {
   };
 
   useEffect(() => {
+    let isCancelled = false;
     const theme = getTheme(activeThemeId);
-    const parsedHtml = parseMarkdown(markdown, theme);
-    setHtmlContent(parsedHtml);
+    
+    // 使用异步调用解析 Markdown
+    parseMarkdown(markdown, theme).then(parsedHtml => {
+      if (!isCancelled) {
+        setHtmlContent(parsedHtml);
+      }
+    }).catch(err => {
+      console.error('Markdown parse error:', err);
+    });
+
+    return () => {
+      isCancelled = true;
+    };
   }, [markdown, activeThemeId]);
 
   const handleCopy = async () => {
@@ -232,7 +253,11 @@ export default function Editor() {
             ref={textareaRef}
             className="flex-1 w-full p-4 resize-none outline-none text-gray-700 font-mono text-sm leading-relaxed"
             value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
+            onChange={(e) => {
+              setMarkdown(e.target.value);
+              // 用户有实质性修改时，才存入缓存
+              localStorage.setItem('mdwechat_draft', e.target.value);
+            }}
             onPaste={handlePaste}
             onDrop={handleDrop}
             onDragOver={(e) => e.preventDefault()}
