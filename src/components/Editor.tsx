@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, ClipboardEvent, DragEvent } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import type { ClipboardEvent, DragEvent } from 'react';
 import { Copy, Monitor, Smartphone, ImagePlus } from 'lucide-react';
 import { themes, getTheme } from '../utils/themes';
 import { parseMarkdown } from '../utils/markdownParser';
