@@ -10,19 +10,23 @@ mermaid.initialize({
 });
 
 export const parseMarkdown = async (markdown: string, theme: Theme): Promise<string> => {
-  // 预处理：自己解析引用链接图片，因为 marked 不支持过长的 base64 URL
+  // 预处理：自己解析引用链接图片，彻底避免任何 Base64 URL 泄露到正文中
   const imageRefs: Record<string, string> = {};
   
-  // 提取所有的 [id]: data:... 
-  let processedMarkdown = markdown.replace(/^\s*\[([^\]]+)\]:\s*(data:image\/[^;]+;base64,\S+)/gm, (_match, id, data) => {
-    imageRefs[id] = data;
-    return ''; // 从 markdown 中移除，避免 marked 解析失败暴露源码
+  // 1. 提取并清除所有的 [id]: data:image/... 引用定义
+  let processedMarkdown = markdown.replace(/\[([^\]]+)\]:\s*(data:image\/[^\s"'<>]+)/gi, (_match, id, data) => {
+    imageRefs[id.trim()] = data.trim();
+    return ''; // 从 markdown 中彻底移除
   });
 
-  // 替换所有的 ![alt][id] 语法为真实的 HTML 标签
+  // 2. 防御性清理任何可能残留的格式
+  processedMarkdown = processedMarkdown.replace(/^\s*\[[^\]]+\]:\s*data:image\/[^\s]+/gim, '');
+
+  // 3. 替换所有的 ![alt][id] 语法为真实的 HTML <img> 标签
   processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\]\[([^\]]+)\]/g, (match, alt, id) => {
-    if (imageRefs[id]) {
-      return `<img src="${imageRefs[id]}" alt="${alt}" />`;
+    const trimmedId = id.trim();
+    if (imageRefs[trimmedId]) {
+      return `<img src="${imageRefs[trimmedId]}" alt="${alt}" />`;
     }
     return match; // 如果没找到引用，保留原样
   });

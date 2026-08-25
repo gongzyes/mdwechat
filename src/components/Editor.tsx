@@ -5,67 +5,20 @@ import { themes, getTheme } from '../utils/themes';
 import { parseMarkdown } from '../utils/markdownParser';
 import 'highlight.js/styles/github.css'; // 使用 GitHub 风格作为高亮基础
 
-const DEFAULT_MARKDOWN = `# 欢迎使用高校微信 Markdown 编辑器
-
-这是一份面向高校行政和学生阅读优化的排版示例。您可以从顶部切换不同的主题体验。
-
-## 为什么选择这款编辑器
-
-对于很多学生干部和行政老师来说，排版一篇公众号文章耗时耗力。使用 Markdown 结合本编辑器的预设样式，可以让你**专注于内容创作**，不再纠结于格式调整。
-
-### 核心功能
-
-1. **一键生成**：实时预览，所见即所得。
-2. **多主题支持**：内置学术经典、校园活力、行政严谨等多种风格。
-3. **完美适配微信**：所有样式通过内联注入，复制后在微信后台粘贴格式不丢失。
-
-> "工欲善其事，必先利其器。优秀的排版能让信息的传达事半功倍。" —— 校党委宣传部
-
-## 排版元素展示
-
-### 列表展示
-
-下面是开学季活动清单：
-
-* **9月1日**：新生报到与注册
-* **9月2日-9月14日**：新生军训
-* **9月15日**：正式上课
-
-1. 第一步：完成线上缴费
-2. 第二步：前往学院大厅领取资料袋
-3. 第三步：入住宿舍
-
-### 表格与代码
-
-| 部门 | 负责人 | 联系方式 |
-| --- | --- | --- |
-| 教务处 | 张老师 | 8888-1234 |
-| 学工部 | 李老师 | 8888-5678 |
-
-\`\`\`javascript
-// 核心配置示例
-const config = {
-  theme: 'academic',
-  fontSize: '16px',
-  isStudentOriented: true
-};
-console.log('配置加载成功', config);
-\`\`\`
-
-如有任何问题，请联系系统管理员。
-
----
-*版权所有 © 2026 XX大学*
-`;
 
 export default function Editor() {
   const [markdown, setMarkdown] = useState(() => {
     const cached = localStorage.getItem('mdwechat_draft');
-    if (cached) {
+    if (cached !== null) {
       return cached;
     }
-    return DEFAULT_MARKDOWN;
+    return '';
   });
+
+  // 监听 markdown 变化，统一同步到本地缓存，包括插入图片等通过代码修改的情况
+  useEffect(() => {
+    localStorage.setItem('mdwechat_draft', markdown);
+  }, [markdown]);
   const [activeThemeId, setActiveThemeId] = useState(themes[0].id);
   const [htmlContent, setHtmlContent] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
@@ -80,7 +33,7 @@ export default function Editor() {
     const reader = new FileReader();
     reader.onload = (e) => {
       const base64 = e.target?.result as string;
-      const imgId = `img_${Math.random().toString(36).substr(2, 9)}`;
+      const imgId = `img_${Math.random().toString(36).substring(2, 9)}`;
       
       // 使用 \n\n 确保 marked 解析器将其识别为独立的引用链接定义，而不是普通段落文本
       const imageRef = `\n\n[${imgId}]: ${base64}\n\n`;
@@ -91,17 +44,20 @@ export default function Editor() {
         const start = textarea.selectionStart;
         const end = textarea.selectionEnd;
         
-        const before = markdown.substring(0, start);
-        const after = markdown.substring(end);
-        
-        setMarkdown(before + imageInsert + after + imageRef);
+        setMarkdown((prev) => {
+          const before = prev.substring(0, start);
+          const after = prev.substring(end);
+          return before + imageInsert + after + imageRef;
+        });
         
         setTimeout(() => {
-          textarea.selectionStart = textarea.selectionEnd = start + imageInsert.length;
-          textarea.focus();
+          if (textareaRef.current) {
+            textareaRef.current.selectionStart = textareaRef.current.selectionEnd = start + imageInsert.length;
+            textareaRef.current.focus();
+          }
         }, 0);
       } else {
-        setMarkdown(prev => prev + '\n' + imageInsert + '\n' + imageRef);
+        setMarkdown((prev) => prev + '\n' + imageInsert + '\n' + imageRef);
       }
     };
     reader.readAsDataURL(file);
@@ -185,7 +141,10 @@ export default function Editor() {
       {/* 顶部导航栏 */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm z-10">
         <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-gray-800">🏫 高校微信排版工具</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-gray-800">🏫 高校微信排版工具</h1>
+            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.2</span>
+          </div>
           
           <select 
             value={activeThemeId} 
@@ -253,8 +212,6 @@ export default function Editor() {
             value={markdown}
             onChange={(e) => {
               setMarkdown(e.target.value);
-              // 用户有实质性修改时，才存入缓存
-              localStorage.setItem('mdwechat_draft', e.target.value);
             }}
             onPaste={handlePaste}
             onDrop={handleDrop}
