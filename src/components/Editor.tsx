@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import type { ClipboardEvent, DragEvent } from 'react';
 import { Copy, Monitor, Smartphone, ImagePlus, RotateCcw, Trash2 } from 'lucide-react';
 import { themes, getTheme } from '../utils/themes';
+import { codeThemes, getCodeTheme } from '../utils/codeThemes';
+import { mermaidThemeOptions, getMermaidTheme } from '../utils/mermaidThemes';
 import { parseMarkdown } from '../utils/markdownParser';
 import 'highlight.js/styles/github.css'; // 使用 GitHub 风格作为高亮基础
 
@@ -90,6 +92,8 @@ export default function Editor() {
     localStorage.setItem('mdwechat_draft', markdown);
   }, [markdown]);
   const [activeThemeId, setActiveThemeId] = useState(themes[0].id);
+  const [activeCodeThemeId, setActiveCodeThemeId] = useState(codeThemes[0].id);
+  const [activeMermaidThemeId, setActiveMermaidThemeId] = useState(mermaidThemeOptions[0].id);
   const [htmlContent, setHtmlContent] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [viewMode, setViewMode] = useState<'pc' | 'mobile'>('pc');
@@ -169,9 +173,11 @@ export default function Editor() {
   useEffect(() => {
     let isCancelled = false;
     const theme = getTheme(activeThemeId);
+    const codeTheme = getCodeTheme(activeCodeThemeId);
+    const mermaidTheme = getMermaidTheme(activeMermaidThemeId);
     
     // 使用异步调用解析 Markdown
-    parseMarkdown(markdown, theme).then(parsedHtml => {
+    parseMarkdown(markdown, theme, codeTheme, mermaidTheme).then(parsedHtml => {
       if (!isCancelled) {
         setHtmlContent(parsedHtml);
       }
@@ -182,7 +188,7 @@ export default function Editor() {
     return () => {
       isCancelled = true;
     };
-  }, [markdown, activeThemeId]);
+  }, [markdown, activeThemeId, activeCodeThemeId, activeMermaidThemeId]);
 
   const handleCopy = async () => {
     if (!previewRef.current) return;
@@ -210,21 +216,55 @@ export default function Editor() {
     <div className="flex flex-col h-screen bg-gray-50 font-sans">
       {/* 顶部导航栏 */}
       <header className="flex items-center justify-between px-6 py-3 bg-white border-b border-gray-200 shadow-sm z-10">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold text-gray-800">🏫 高校微信排版工具</h1>
-            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.3</span>
+            <h1 className="text-lg font-bold text-gray-800 tracking-tight">🏫 高校微信排版工具</h1>
+            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.4</span>
           </div>
           
-          <select 
-            value={activeThemeId} 
-            onChange={(e) => setActiveThemeId(e.target.value)}
-            className="ml-4 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-          >
-            {themes.map(t => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            {/* 文章主题 */}
+            <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">
+              <span className="text-xs text-gray-500 font-medium">主题:</span>
+              <select 
+                value={activeThemeId} 
+                onChange={(e) => setActiveThemeId(e.target.value)}
+                className="text-xs text-gray-700 font-medium focus:outline-none bg-transparent cursor-pointer"
+              >
+                {themes.map(t => (
+                  <option key={t.id} value={t.id}>{t.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* 代码高亮主题 */}
+            <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">
+              <span className="text-xs text-gray-500 font-medium">代码:</span>
+              <select 
+                value={activeCodeThemeId} 
+                onChange={(e) => setActiveCodeThemeId(e.target.value)}
+                className="text-xs text-gray-700 font-medium focus:outline-none bg-transparent cursor-pointer"
+              >
+                {codeThemes.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mermaid 图表主题 */}
+            <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 px-2.5 py-1 rounded-md">
+              <span className="text-xs text-gray-500 font-medium">图表:</span>
+              <select 
+                value={activeMermaidThemeId} 
+                onChange={(e) => setActiveMermaidThemeId(e.target.value)}
+                className="text-xs text-gray-700 font-medium focus:outline-none bg-transparent cursor-pointer"
+              >
+                {mermaidThemeOptions.map(m => (
+                  <option key={m.id} value={m.id}>{m.name}</option>
+                ))}
+              </select>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-4">
