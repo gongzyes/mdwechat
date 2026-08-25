@@ -10,6 +10,23 @@ mermaid.initialize({
 });
 
 export const parseMarkdown = async (markdown: string, theme: Theme): Promise<string> => {
+  // 预处理：自己解析引用链接图片，因为 marked 不支持过长的 base64 URL
+  const imageRefs: Record<string, string> = {};
+  
+  // 提取所有的 [id]: data:... 
+  let processedMarkdown = markdown.replace(/^\s*\[([^\]]+)\]:\s*(data:image\/[^;]+;base64,\S+)/gm, (_match, id, data) => {
+    imageRefs[id] = data;
+    return ''; // 从 markdown 中移除，避免 marked 解析失败暴露源码
+  });
+
+  // 替换所有的 ![alt][id] 语法为真实的 HTML 标签
+  processedMarkdown = processedMarkdown.replace(/!\[([^\]]*)\]\[([^\]]+)\]/g, (match, alt, id) => {
+    if (imageRefs[id]) {
+      return `<img src="${imageRefs[id]}" alt="${alt}" />`;
+    }
+    return match; // 如果没找到引用，保留原样
+  });
+
   // 设置 marked，使用 highlight.js
   marked.setOptions({
     gfm: true,
@@ -17,7 +34,7 @@ export const parseMarkdown = async (markdown: string, theme: Theme): Promise<str
   });
 
   // 使用 marked 解析出基础 HTML
-  const rawHtml = marked.parse(markdown) as string;
+  const rawHtml = marked.parse(processedMarkdown) as string;
 
   // 使用浏览器自带的 DOMParser 解析 HTML
   const parser = new DOMParser();

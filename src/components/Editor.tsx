@@ -62,8 +62,6 @@ export default function Editor() {
   const [markdown, setMarkdown] = useState(() => {
     const cached = localStorage.getItem('mdwechat_draft');
     if (cached) {
-      // 成功恢复后立即删除缓存。这样如果用户没有编辑直接再次刷新，就会加载默认内容
-      setTimeout(() => localStorage.removeItem('mdwechat_draft'), 0);
       return cached;
     }
     return DEFAULT_MARKDOWN;
