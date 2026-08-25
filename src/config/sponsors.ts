@@ -8,35 +8,35 @@ export interface SponsorAd {
 }
 
 export interface BottomStatusAd {
+  badge: string;
   text: string;
   highlight: string;
   link: string;
 }
 
 export const sponsorConfig = {
-  // 底部状态栏原生文字推广（点击跳转）
+  // 底部状态栏原生文字推广（腾讯云 WorkBuddy 推广链接）
   bottomStatusAd: {
-    badge: '推广',
-    text: '高校教师与创作者专属：',
-    highlight: '免费领 AI 论文润色/降重与文献翻译体验包 🎁',
-    link: 'https://github.com/gongzyes/mdwechat', // 用户后续可替换为自己的分销/推广链接
+    badge: '特惠',
+    text: '腾讯云 WorkBuddy / 开发者上云专区：',
+    highlight: '新老用户特惠限时直达 🚀',
+    link: 'https://curl.qcloud.com/MrjROrJN',
   },
 
-  // 复制成功弹窗中的推荐卡片
+  // 复制成功弹窗中的推荐卡片（阿里云推广链接）
   copySuccessAd: {
-    tag: '创作者推荐',
-    title: '微信公众号 2.35:1 封面图一键裁剪生成工具',
-    description: '专为高校融媒体与公众号设计，海量学术/校园风高清免版权配图',
-    btnText: '免费体验',
-    link: 'https://github.com/gongzyes/mdwechat', // 用户后续可替换为自己的推广链接
+    tag: '高校与开发者特惠',
+    title: '阿里云跨端算力与云产品专属权益',
+    description: '高校科研上云、部署专属 AI 服务与建站，领新人专享大额福利礼包',
+    btnText: '一键直达领取',
+    link: 'https://www.aliyun.com/benefit/client/cross?userCode=il5dziv2',
   },
 
   // 赞赏支持配置
   donation: {
     title: '支持作者持续维护',
-    subtitle: '如果这款工具提升了您的排版效率，欢迎请作者喝杯咖啡 ☕',
-    note: '所有赞赏将用于服务器维持与新功能开发（如更多高校专属模板、AI 智能排版等）',
-    // 默认赞赏二维码图片路径（可放置在 public/pay_qr.png）
-    qrImage: '', // 如果为空则显示极简爱心赞助卡片
+    subtitle: '如果这款工具提升了您的排版效率，欢迎支持本项目 ☕',
+    note: '所有赞助将用于服务器维持与新功能开发（如更多高校专属模板、AI 智能排版等）',
+    qrImage: '', // 暂不放置个人收款二维码
   }
 };

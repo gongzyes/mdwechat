@@ -35,30 +35,54 @@ export const DonationModal: React.FC<DonationModalProps> = ({ isOpen, onClose })
             </button>
           </div>
 
-          {/* 赞赏内容主体 */}
-          <div className="my-6 p-5 bg-amber-50/60 rounded-xl border border-amber-100/80 text-center">
-            {sponsorConfig.donation.qrImage ? (
-              <div className="flex justify-center my-2">
-                <img
-                  src={sponsorConfig.donation.qrImage}
-                  alt="赞赏二维码"
-                  className="w-48 h-48 object-contain rounded-lg shadow-sm"
-                />
-              </div>
-            ) : (
-              <div className="py-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-amber-100 text-amber-600 mb-3">
-                  <Coffee size={32} />
+          {/* 赞赏与支持通道 */}
+          <div className="my-5 p-5 bg-gradient-to-b from-amber-50/60 to-orange-50/30 rounded-xl border border-amber-100/80 text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 text-amber-600 mb-2.5 shadow-sm">
+              <Coffee size={28} />
+            </div>
+            <h4 className="text-sm font-bold text-gray-800">免费支持作者的方式 💡</h4>
+            <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto leading-relaxed">
+              如果您有云服务器、算力或建站需求，可以通过以下官方特惠通道选购，您可享受专属折扣，同时也能为作者提供一份支持：
+            </p>
+
+            <div className="mt-4 flex flex-col gap-2">
+              <a
+                href={sponsorConfig.bottomStatusAd.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-amber-200/70 hover:border-blue-300 hover:shadow-sm transition-all text-left group"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-800 group-hover:text-blue-600 transition-colors">
+                    ☁️ 腾讯云 WorkBuddy 上云专区
+                  </span>
                 </div>
-                <h4 className="text-sm font-semibold text-gray-800">☕ 请作者喝一杯清凉冰美式</h4>
-                <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
-                  支持本项目的独立维护与持续更新，更多高校专属排版主题与图表模板正在加速研发中！
-                </p>
-              </div>
-            )}
+                <span className="text-[11px] text-blue-600 font-medium flex items-center gap-0.5">
+                  <span>直达特惠</span>
+                  <ExternalLink size={11} />
+                </span>
+              </a>
+
+              <a
+                href={sponsorConfig.copySuccessAd.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-2.5 rounded-lg bg-white border border-amber-200/70 hover:border-orange-300 hover:shadow-sm transition-all text-left group"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-800 group-hover:text-orange-600 transition-colors">
+                    🔶 阿里云跨端算力专享礼包
+                  </span>
+                </div>
+                <span className="text-[11px] text-orange-600 font-medium flex items-center gap-0.5">
+                  <span>领取权益</span>
+                  <ExternalLink size={11} />
+                </span>
+              </a>
+            </div>
             
-            <p className="text-[11px] text-amber-800/80 mt-2">
-              💡 {sponsorConfig.donation.note}
+            <p className="text-[11px] text-amber-800/70 mt-3.5">
+              感谢每一位老师、同学与创作者的陪伴与支持！
             </p>
           </div>
 

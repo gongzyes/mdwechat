@@ -230,7 +230,7 @@ export default function Editor() {
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-800 tracking-tight">🏫 高校微信排版工具</h1>
-            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.5</span>
+            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.5.1</span>
           </div>
           
           <div className="flex items-center gap-3">
