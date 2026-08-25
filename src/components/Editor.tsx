@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import type { ClipboardEvent, DragEvent } from 'react';
-import { Copy, Monitor, Smartphone, ImagePlus, RotateCcw, Trash2 } from 'lucide-react';
+import { Copy, Monitor, Smartphone, ImagePlus, RotateCcw, Trash2, Heart } from 'lucide-react';
 import { themes, getTheme } from '../utils/themes';
 import { codeThemes, getCodeTheme } from '../utils/codeThemes';
 import { mermaidThemeOptions, getMermaidTheme } from '../utils/mermaidThemes';
 import { parseMarkdown } from '../utils/markdownParser';
+import { sponsorConfig } from '../config/sponsors';
+import { DonationModal } from './DonationModal';
+import { CopySuccessModal } from './CopySuccessModal';
 import 'highlight.js/styles/github.css'; // 使用 GitHub 风格作为高亮基础
 
 export const SAMPLE_ARTICLE = `# 🏫 欢迎使用高校微信 Markdown 排版神器
@@ -97,9 +100,16 @@ export default function Editor() {
   const [htmlContent, setHtmlContent] = useState('');
   const [copySuccess, setCopySuccess] = useState(false);
   const [viewMode, setViewMode] = useState<'pc' | 'mobile'>('pc');
+  const [isDonationModalOpen, setIsDonationModalOpen] = useState(false);
+  const [isCopySuccessModalOpen, setIsCopySuccessModalOpen] = useState(false);
 
   const previewRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 统计字数与预计阅读时间
+  const charCount = markdown.length;
+  const wordCount = (markdown.match(/[\u4e00-\u9fa5]|[a-zA-Z0-9_-]+/g) || []).length;
+  const readingTime = Math.max(1, Math.ceil(wordCount / 350));
 
   const handleImageUpload = (file: File) => {
     if (!file.type.startsWith('image/')) return;
@@ -205,7 +215,8 @@ export default function Editor() {
       
       await navigator.clipboard.write([clipboardItem]);
       setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      setIsCopySuccessModalOpen(true);
+      setTimeout(() => setCopySuccess(false), 2500);
     } catch (err) {
       console.error('复制失败:', err);
       alert('复制失败，请重试');
@@ -219,7 +230,7 @@ export default function Editor() {
         <div className="flex items-center gap-5 flex-wrap">
           <div className="flex items-center gap-2">
             <h1 className="text-lg font-bold text-gray-800 tracking-tight">🏫 高校微信排版工具</h1>
-            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.4</span>
+            <span className="text-xs bg-blue-100 text-blue-700 font-semibold px-2 py-0.5 rounded-full">v1.5</span>
           </div>
           
           <div className="flex items-center gap-3">
@@ -267,7 +278,17 @@ export default function Editor() {
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          {/* 赞赏支持 */}
+          <button
+            onClick={() => setIsDonationModalOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+            title="请作者喝杯咖啡"
+          >
+            <Heart size={14} className="fill-red-500 text-red-500" />
+            <span>赞赏支持</span>
+          </button>
+
           <div className="flex bg-gray-100 p-1 rounded-md">
             <button 
               onClick={() => setViewMode('pc')}
@@ -289,7 +310,7 @@ export default function Editor() {
             onClick={handleCopy}
             className={`flex items-center gap-2 px-4 py-2 rounded-md font-medium text-sm transition-colors ${
               copySuccess 
-                ? 'bg-green-100 text-green-700' 
+                ? 'bg-green-600 text-white shadow-sm' 
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
@@ -380,6 +401,44 @@ export default function Editor() {
           </div>
         </div>
       </main>
+
+      {/* 底部状态栏与原生推荐 */}
+      <footer className="px-4 py-1.5 bg-white border-t border-gray-200 text-xs text-gray-500 flex items-center justify-between z-10 flex-shrink-0 select-none">
+        <div className="flex items-center gap-4 text-[11px]">
+          <span>总字数: <strong className="text-gray-700 font-medium">{wordCount}</strong></span>
+          <span>字符数: <strong className="text-gray-700 font-medium">{charCount}</strong></span>
+          <span>预计阅读: <strong className="text-gray-700 font-medium">约 {readingTime} 分钟</strong></span>
+        </div>
+
+        {sponsorConfig.bottomStatusAd && (
+          <div className="flex items-center gap-2">
+            <span className="bg-amber-100 text-amber-800 text-[10px] px-1.5 py-0.5 rounded font-semibold uppercase">
+              {sponsorConfig.bottomStatusAd.badge}
+            </span>
+            <a
+              href={sponsorConfig.bottomStatusAd.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1 group"
+            >
+              <span>{sponsorConfig.bottomStatusAd.text}</span>
+              <span className="text-blue-600 font-medium underline group-hover:text-blue-700">
+                {sponsorConfig.bottomStatusAd.highlight}
+              </span>
+            </a>
+          </div>
+        )}
+      </footer>
+
+      {/* 弹窗组件 */}
+      <DonationModal
+        isOpen={isDonationModalOpen}
+        onClose={() => setIsDonationModalOpen(false)}
+      />
+      <CopySuccessModal
+        isOpen={isCopySuccessModalOpen}
+        onClose={() => setIsCopySuccessModalOpen(false)}
+      />
     </div>
   );
 }
